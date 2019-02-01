@@ -24,12 +24,28 @@ enum
    DONE, OK, EMPTY_LINE
 };
 
-// list of valid opcodes
+// Global list of valid opcodes
 char opcodes[28][5] = {
     "ADD", "AND", "BR", "BRn", "BRz", "BRp", "BRnz", "BRnp", "BRzp", "BRnzp", "HALT", "JMP", "JSR", "JSRR", "LDB", "LDW",
             "LEA", "NOP", "NOT", "RET", "LSHF", "RSHFL", "RSHFA", "RTI", "STB", "STW", "TRAP", "XOR"
 
 };
+
+// Global .ORIG address
+int ORIG = 0;
+
+// Global current address
+int currentAddress = 0;
+
+// Global Symbol Table
+#define MAX_LABEL_LEN 20
+#define MAX_SYMBOLS 255
+typedef struct {
+    int address;
+    char label[MAX_LABEL_LEN + 1];
+} TableEntry;
+TableEntry symbolTable[MAX_SYMBOLS];
+
 
 
 int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
