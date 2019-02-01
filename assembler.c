@@ -46,6 +46,8 @@ typedef struct {
 } TableEntry;
 TableEntry symbolTable[MAX_SYMBOLS];
 
+// func decleration
+int isOpcode(char * ptr);
 
 
 int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
@@ -109,7 +111,7 @@ FILE* outfile = NULL;
 
 int main(int argc, char* argv[]) {
 
-    printf("hello world");
+    printf("hello world\n\n");
      /* open the source file */
      infile = fopen(argv[1], "r");
      outfile = fopen(argv[2], "w");
