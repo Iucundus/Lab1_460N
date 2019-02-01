@@ -26,8 +26,8 @@ enum
 
 // Global list of valid opcodes
 char opcodes[28][5] = {
-    "ADD", "AND", "BR", "BRn", "BRz", "BRp", "BRnz", "BRnp", "BRzp", "BRnzp", "HALT", "JMP", "JSR", "JSRR", "LDB", "LDW",
-            "LEA", "NOP", "NOT", "RET", "LSHF", "RSHFL", "RSHFA", "RTI", "STB", "STW", "TRAP", "XOR"
+    "add", "and", "br", "brn", "brz", "brp", "brnz", "brnp", "brzp", "brnzp", "halt", "jmp", "jsr", "jsrr", "ldb", "ldw",
+            "lea", "nop", "not", "ret", "lshf", "rshfl", "rshfa", "rti", "stb", "stw", "trap", "xor"
 
 };
 
@@ -126,12 +126,12 @@ int main(int argc, char* argv[]) {
 	char lLine[MAX_LINE_LENGTH + 1],
 		*lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
 	int lRet;
-	FILE * lInfile;
 
-	lInfile = fopen( "data.in", "r" );	// open the input file
-	while( lRet != DONE ) {
-		lRet = readAndParse( lInfile, lLine, &lLabel,
+    while( lRet != DONE ) {
+		lRet = readAndParse(infile, lLine, &lLabel,
 			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+
+        //
 		if( lRet != DONE && lRet != EMPTY_LINE )
 		{
 			printf("%s %s %s %s %s %s\n", lLabel, lOpcode, lArg1, lArg2, lArg3, lArg4);
