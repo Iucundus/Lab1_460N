@@ -2,7 +2,7 @@
 	Name 1: John Koelling
 	Name 2: Grayson Watkins
 	UTEID 1: JKK887
-	UTEID 2: gaw874
+	UTEID 2: UTEID of the second partner
 */
 /*
 EE 460N, Lab 1
@@ -10,9 +10,14 @@ EE 460N, Lab 1
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* String operations library */
-#include <ctype.h> /* Library for useful character operations */
-#include <limits.h> /* Library for definitions of common variable type characteristics */
+
+/*
+ * isOpCode
+ * Placeholder, rewrite this
+ */
+int isOpcode(char * ptr) {
+	return 1;
+}
 
 /*
 Parsing Assembly Language
@@ -69,10 +74,6 @@ int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode,
 	return( OK );
 }
 
-int isOpcode(char * ptr){
-	return 1;
-}
-
 
 FILE* infile = NULL;
 FILE* outfile = NULL;
@@ -96,11 +97,9 @@ int main(int argc, char* argv[]) {
 	char lLine[MAX_LINE_LENGTH + 1],
 		*lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
 	int lRet;
-	FILE * lInfile;
 
-	lInfile = fopen( "data.in", "r" );	// open the input file
 	while( lRet != DONE ) {
-		lRet = readAndParse( lInfile, lLine, &lLabel,
+		lRet = readAndParse(infile, lLine, &lLabel,
 			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 		if( lRet != DONE && lRet != EMPTY_LINE )
 		{
