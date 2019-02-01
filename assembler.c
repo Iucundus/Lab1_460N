@@ -109,6 +109,7 @@ FILE* outfile = NULL;
 
 int main(int argc, char* argv[]) {
 
+    printf("hello world");
      /* open the source file */
      infile = fopen(argv[1], "r");
      outfile = fopen(argv[2], "w");
