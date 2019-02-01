@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
      /* Do stuff with files */
 	char lLine[MAX_LINE_LENGTH + 1],
 		*lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
-	int lRet;
+	int lRet = EMPTY_LINE; // may need to make sure this is ok
 
     while( lRet != DONE ) {
 		lRet = readAndParse(infile, lLine, &lLabel,
