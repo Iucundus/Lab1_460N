@@ -32,10 +32,13 @@ char opcodes[28][5] = {
 };
 
 // Global .ORIG address
-int ORIG = 0;
+int16_t ORIG = 0;
 
 // Global current address
-int currentAddress = 0;
+int16_t currentAddress = 0;
+
+// Global symbol table iterator
+int symTabIt = 0;
 
 // Global Symbol Table
 #define MAX_LABEL_LEN 20
@@ -48,6 +51,7 @@ TableEntry symbolTable[MAX_SYMBOLS];
 
 // func decleration
 int isOpcode(char * ptr);
+int toNum( char * pStr );
 
 
 int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
@@ -102,7 +106,7 @@ int isOpcode(char * ptr){
             return 1;
         }
     }
-	return 0;
+	return -1;
 }
 
 
@@ -111,8 +115,6 @@ FILE* outfile = NULL;
 
 int main(int argc, char* argv[]) {
 
-    printf("hello world\n\n");
-     /* open the source file */
      infile = fopen(argv[1], "r");
      outfile = fopen(argv[2], "w");
 
@@ -130,20 +132,116 @@ int main(int argc, char* argv[]) {
 		*lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
 	int lRet = EMPTY_LINE; // may need to make sure this is ok
 
+    // go to .ORIG
+    while( lRet != DONE && ORIG == 0){
+        lRet = readAndParse(infile, lLine, &lLabel,
+                                   &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+
+        if( lRet == OK){
+            if( strcmp(lOpcode, ".orig") == 0){
+                ORIG = toNum(lArg1);
+                currentAddress = ORIG;
+                printf("Starting address: 0x%04x\n", ORIG);
+            }
+        }
+    }
+
     while( lRet != DONE ) {
 		lRet = readAndParse(infile, lLine, &lLabel,
 			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
 
-		if( lRet != DONE && lRet != EMPTY_LINE )
-		{
-			fprintf(infile, "%s %s %s %s %s %s\n", lLabel, lOpcode, lArg1, lArg2, lArg3, lArg4);
+		if( lRet == OK ) {
+            // check for Label
+            if(strcmp(lLabel, "") != 0) {
+                // found a label
+                strcpy(symbolTable[symTabIt].label, lLabel);
+                symbolTable[symTabIt].address = currentAddress;
+                symTabIt++;
+                printf("%s   @address: 0x%04x\n", lLabel, currentAddress);
+            }
+            currentAddress += 0x02;
 		}
 	};
 
+    // print out the symbol table
+    printf("symbol table:\n");
+    for(int i = 0; i < symTabIt; i++){
+        printf("%s   @address: 0x%04x\n", symbolTable[i].label, symbolTable[i].address);
+    }
 
      /* Close the files*/
 
      fclose(infile);
      fclose(outfile);
+}
+
+
+/* Convert a String To a Number
+Hex numbers must be in the form “x3000”, and decimal numbers must be in the form “#30”.
+*/
+
+int toNum( char * pStr ) {
+    char * t_ptr;
+    char * orig_pStr;
+    int t_length,k;
+    int lNum, lNeg = 0;
+    long int lNumLong;
+
+    orig_pStr = pStr;
+    if( *pStr == '#' )				/* decimal */
+    {
+        pStr++;
+        if( *pStr == '-' )				/* dec is negative */
+        {
+            lNeg = 1;
+            pStr++;
+        }
+        t_ptr = pStr;
+        t_length = strlen(t_ptr);
+        for(k=0;k < t_length;k++)
+        {
+            if (!isdigit(*t_ptr))
+            {
+                printf("Error: invalid decimal operand, %s\n",orig_pStr);
+                exit(4);
+            }
+            t_ptr++;
+        }
+        lNum = atoi(pStr);
+        if (lNeg)
+            lNum = -lNum;
+
+        return lNum;
+    }
+    else if( *pStr == 'x' )	/* hex     */
+    {
+        pStr++;
+        if( *pStr == '-' )				/* hex is negative */
+        {
+            lNeg = 1;
+            pStr++;
+        }
+        t_ptr = pStr;
+        t_length = strlen(t_ptr);
+        for(k=0;k < t_length;k++)
+        {
+            if (!isxdigit(*t_ptr))
+            {
+                printf("Error: invalid hex operand, %s\n",orig_pStr);
+                exit(4);
+            }
+            t_ptr++;
+        }
+        lNumLong = strtol(pStr, NULL, 16);    /* convert hex string into integer */
+        lNum = (lNumLong > INT_MAX)? INT_MAX : lNumLong;
+        if( lNeg )
+            lNum = -lNum;
+        return lNum;
+    }
+    else
+    {
+        printf( "Error: invalid operand, %s\n", orig_pStr);
+        exit(4);  /* This has been changed from error code 3 to error code 4, see clarification 12 */
+    }
 }
