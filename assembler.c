@@ -2,7 +2,7 @@
 	Name 1: John Koelling
 	Name 2: Grayson Watkins
 	UTEID 1: JKK887
-	UTEID 2: UTEID of the second partner
+	UTEID 2: gaw874
 */
 /*
 EE 460N, Lab 1
