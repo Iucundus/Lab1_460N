@@ -3,3 +3,9 @@ build: assembler.c
 
 run: assemble AsmExample.asm
 	./assemble AsmExample.asm AsmOutput.obj
+
+clean: assemble AsmOutput.obj
+	rm assemble
+	rm AsmOutput.obj
+
+
