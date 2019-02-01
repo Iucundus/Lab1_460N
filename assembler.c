@@ -131,10 +131,10 @@ int main(int argc, char* argv[]) {
 		lRet = readAndParse(infile, lLine, &lLabel,
 			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
-        //
+
 		if( lRet != DONE && lRet != EMPTY_LINE )
 		{
-			printf("%s %s %s %s %s %s\n", lLabel, lOpcode, lArg1, lArg2, lArg3, lArg4);
+			fprintf(infile, "%s %s %s %s %s %s\n", lLabel, lOpcode, lArg1, lArg2, lArg3, lArg4);
 		}
 	};
 
