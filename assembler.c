@@ -31,6 +31,29 @@ char opcodes[28][5] = {
 
 };
 
+// Hex values that the opcodes correspond to
+int opcodesobj[28] = {0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04};
+
+int renderInstructions[28][4] = {
+	//{Arg1,Arg2,...}  //100s place is how many bits to use. Remainder is offset from after opcode to place argument in
+	{300,303,309,-1}, //ADD
+	{300,303,309,-1}, // AND
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // BRn
+	{300,303,309,-1}, // HALT
+	{303,-1,-1,-1}, // JMP
+	{1101,-1,-1,-1}, // JSR
+	{303,-1,-1,-1}, // JSRR
+	{300,303,606,-1}, // LDB
+	{300,303,606,-1}, // LDW
+	{300,903,-1,-1} // LEA
+};
+
 // Global .ORIG address
 int16_t ORIG = 0;
 
@@ -103,7 +126,7 @@ int isOpcode(char * ptr){
     // iterate through opcodes
     for(int i = 0; i < 28; i++){
         if(strcmp(ptr, opcodes[i]) == 0){
-            return 1;
+            return i;
         }
     }
 	return -1;
@@ -169,6 +192,28 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < symTabIt; i++){
         printf("%s   @address: 0x%04x\n", symbolTable[i].label, symbolTable[i].address);
     }
+
+    // Begin second pass
+    rewind(infile);
+    lRet = EMPTY_LINE;
+
+    while( lRet != DONE ) {
+		lRet = readAndParse(infile, lLine, &lLabel,
+			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+
+
+		if( lRet == OK ) {
+            int output = 0;
+            output |= (&lOpcode << 12);
+            int opcodeType = isOpcode(&lOpcode);
+
+            if (renderInstructions[opcodeType][0] != -1) {
+            	output |= (toNum(lArg1) << (12 - renderInstructions[opcodeType][0] / 100 - renderInstructions[opcodeType][0] % 100));
+            }
+
+            currentAddress += 0x02;
+		}
+	};
 
      /* Close the files*/
 
