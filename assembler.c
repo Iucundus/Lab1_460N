@@ -54,6 +54,44 @@ int renderInstructions[28][4] = {
 	{300,903,-1,-1} // LEA
 };
 
+int orMasks[28] = { // All are undone
+	0x0, //ADD
+	0x0, // AND
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // BRn
+	0x0, // HALT
+	0x0, // JMP
+	0x0, // JSR
+	0x0, // JSRR
+	0x0, // LDB
+	0x0, // LDW
+	0x0 // LEA
+};
+
+int andMasks[28] = { // All are undone
+	0xFFFF, //ADD
+	0xFFFF, // AND
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // BRn
+	0xFFFF, // HALT
+	0xFFFF, // JMP
+	0xFFFF, // JSR
+	0xFFFF, // JSRR
+	0xFFFF, // LDB
+	0xFFFF, // LDW
+	0xFFFF // LEA
+};
+
 // Global .ORIG address
 int16_t ORIG = 0;
 
@@ -204,12 +242,29 @@ int main(int argc, char* argv[]) {
 
 		if( lRet == OK ) {
             int output = 0;
-            output |= (&lOpcode << 12);
-            int opcodeType = isOpcode(&lOpcode);
+            //output = output + *lOpcode; //TODO: rewrite this. Set first four bits of output to be the opcode.
+            output = output << 12;
+            int opcodeType = isOpcode(lOpcode);
+            //TODO: Change the opcode type to be one of the sub-types for each instruction
+
+            output |= orMasks[opcodeType];
+            //TODO: make the bits to put in the actual object file, whether by PC offset or labels or whatever
 
             if (renderInstructions[opcodeType][0] != -1) {
-            	output |= (toNum(lArg1) << (12 - renderInstructions[opcodeType][0] / 100 - renderInstructions[opcodeType][0] % 100));
+            	output |= (toNum(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
             }
+            if (renderInstructions[opcodeType][1] != -1) {
+            	output |= (toNum(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
+            }
+            if (renderInstructions[opcodeType][2] != -1) {
+            	output |= (toNum(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
+            }
+            if (renderInstructions[opcodeType][3] != -1) {
+            	output |= (toNum(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
+            }
+
+            output &= andMasks[opcodeType];
+        	fprintf( outfile, "0x%.4X\n", output);
 
             currentAddress += 0x02;
 		}
@@ -219,6 +274,17 @@ int main(int argc, char* argv[]) {
 
      fclose(infile);
      fclose(outfile);
+}
+
+/*
+ * Return the renderInstructions left shift value
+ */
+int lShift(int opc, int argN) {
+	return 12 - renderInstructions[opc][argN] / 100 - renderInstructions[opc][argN] % 100;
+}
+
+int bitMask(int opc, int argN) {
+	return 0xFFFF >> (16 - renderInstructions[opc][argN] / 100);
 }
 
 
