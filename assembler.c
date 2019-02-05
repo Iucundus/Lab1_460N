@@ -241,6 +241,8 @@ int main(int argc, char* argv[]) {
 
 
 		if( lRet == OK ) {
+            // TODO: make sure to implement a count to count the address of the current instruction
+            // TODO: to calculate PC Offset, use offsetCalc( Location, Arg)
             int output = 0;
             //output = output + *lOpcode; //TODO: rewrite this. Set first four bits of output to be the opcode.
             output = output << 12;
@@ -264,7 +266,7 @@ int main(int argc, char* argv[]) {
             }
 
             output &= andMasks[opcodeType];
-        	fprintf( outfile, "0x%.4X\n", output);
+        	fprintf( outfile, "0x%04X\n", output);
 
             currentAddress += 0x02;
 		}
@@ -285,6 +287,13 @@ int lShift(int opc, int argN) {
 
 int bitMask(int opc, int argN) {
 	return 0xFFFF >> (16 - renderInstructions[opc][argN] / 100);
+}
+
+/*
+ * Calculate PC Offset
+ */
+int offsetCalc(int location, char* Arg){
+    // ToDo: if PC Offset: return offset, else if Label: calculate and return offset
 }
 
 /*
