@@ -251,16 +251,16 @@ int main(int argc, char* argv[]) {
             //TODO: make the bits to put in the actual object file, whether by PC offset or labels or whatever
 
             if (renderInstructions[opcodeType][0] != -1) {
-            	output |= (toNum(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
+            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
             }
             if (renderInstructions[opcodeType][1] != -1) {
-            	output |= (toNum(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
+            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
             }
             if (renderInstructions[opcodeType][2] != -1) {
-            	output |= (toNum(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
+            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
             }
             if (renderInstructions[opcodeType][3] != -1) {
-            	output |= (toNum(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
+            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
             }
 
             output &= andMasks[opcodeType];
@@ -285,6 +285,15 @@ int lShift(int opc, int argN) {
 
 int bitMask(int opc, int argN) {
 	return 0xFFFF >> (16 - renderInstructions[opc][argN] / 100);
+}
+
+/*
+ * Assemble a single operand
+ */
+int assembleOperand(char * arg) {
+	if (arg[0] == 'r')
+		return (int) arg[1];
+	return toNum(arg);
 }
 
 
