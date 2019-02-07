@@ -316,7 +316,7 @@ int offsetCalc(int currentPC, char* Arg){
                 return offset; // may have to bit shift or something, I can't remember
             }
         }
-        // TODO: Error! could not find the symbol
+        exit(1);
     }
 }
 
