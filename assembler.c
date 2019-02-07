@@ -231,8 +231,13 @@ int main(int argc, char* argv[]) {
         printf("%s   @address: 0x%04x\n", symbolTable[i].label, symbolTable[i].address);
     }
 
+    // Testing offsetCalc()
+    //int offset = offsetCalc(0x1000, "y");
+    //printf("computed offset is: 0x%04x\n", offset);
+
     // Begin second pass
     rewind(infile);
+    int currentPC = ORIG; // the current PC should be updated before the instruction is processed.
     lRet = EMPTY_LINE;
 
     while( lRet != DONE ) {
@@ -241,8 +246,9 @@ int main(int argc, char* argv[]) {
 
 
 		if( lRet == OK ) {
+            currentPC += 0x02;
             // TODO: make sure to implement a count to count the address of the current instruction
-            // TODO: to calculate PC Offset, use offsetCalc( Location, Arg)
+            // TODO: to calculate PC Offset, use offsetCalc( currentPC, Arg)
             int output = 0;
             //output = output + *lOpcode; //TODO: rewrite this. Set first four bits of output to be the opcode.
             output = output << 12;
@@ -268,7 +274,7 @@ int main(int argc, char* argv[]) {
             output &= andMasks[opcodeType];
         	fprintf( outfile, "0x%04X\n", output);
 
-            currentAddress += 0x02;
+            //currentAddress += 0x02;
 		}
 	};
 
@@ -292,8 +298,26 @@ int bitMask(int opc, int argN) {
 /*
  * Calculate PC Offset
  */
-int offsetCalc(int location, char* Arg){
+int offsetCalc(int currentPC, char* Arg){
     // ToDo: if PC Offset: return offset, else if Label: calculate and return offset
+    // valid Label formats: BR (9), JSR (11), LEA (9)
+    if(Arg[0] == '#'){
+        // it is PC offset
+        // change to integer and return
+        return toNum(Arg);
+
+    }else{
+        // it is Label
+        // find label in symbol table
+        for(int i = 0; i < symTabIt; i++){
+            if(strcmp(symbolTable[i].label, Arg) == 0){
+                // found the symbol
+                int offset = symbolTable[i].address - currentPC;
+                return offset; // may have to bit shift or something, I can't remember
+            }
+        }
+        // TODO: Error! could not find the symbol
+    }
 }
 
 /*
