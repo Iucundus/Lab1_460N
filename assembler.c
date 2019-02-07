@@ -113,9 +113,10 @@ TableEntry symbolTable[MAX_SYMBOLS];
 // func decleration
 int isOpcode(char * ptr);
 int toNum( char * pStr );
-
-
-int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
+void firstPass();
+void secondPass();
+void printSymbolTable();
+int	readAndParse(FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
    char * lRet, * lPtr;
    int i;
    if( !fgets( pLine, MAX_LINE_LENGTH, pInfile ) )
@@ -159,7 +160,6 @@ int	readAndParse( FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode,
 	*pArg4 = lPtr;
 	return( OK );
 }
-
 int isOpcode(char * ptr){
     // iterate through opcodes
     for(int i = 0; i < 28; i++){
@@ -188,15 +188,43 @@ int main(int argc, char* argv[]) {
        exit(4);
      }
 
-     /* Do stuff with files */
-	char lLine[MAX_LINE_LENGTH + 1],
-		*lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
-	int lRet = EMPTY_LINE; // may need to make sure this is ok
+    firstPass();
+    printSymbolTable();
+    // Testing offsetCalc()
+    //int offset = offsetCalc(0x1000, "y");
+    //printf("computed offset is: 0x%04x\n", offset);
+    secondPass();
+
+
+
+
+
+     /* Close the files*/
+
+     fclose(infile);
+     fclose(outfile);
+}
+
+void printSymbolTable() {
+    printf("symbol table:\n");
+    for(int i = 0; i < symTabIt; i++){
+        printf("%s   @address: 0x%04x\n", symbolTable[i].label, symbolTable[i].address);
+    }
+}
+
+
+/*
+ *  Parses code for the first time to create a symbol table
+ */
+void firstPass() {
+    char lLine[MAX_LINE_LENGTH + 1],
+            *lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
+    int lRet = EMPTY_LINE; // may need to make sure this is ok
 
     // go to .ORIG
     while( lRet != DONE && ORIG == 0){
         lRet = readAndParse(infile, lLine, &lLabel,
-                                   &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+                            &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
         if( lRet == OK){
             if( strcmp(lOpcode, ".orig") == 0){
@@ -208,44 +236,42 @@ int main(int argc, char* argv[]) {
     }
 
     while( lRet != DONE ) {
-		lRet = readAndParse(infile, lLine, &lLabel,
-			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+        lRet = readAndParse(infile, lLine, &lLabel,
+                            &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
 
-		if( lRet == OK ) {
+        if( lRet == OK ) {
             // check for Label
             if(strcmp(lLabel, "") != 0) {
                 // found a label
                 strcpy(symbolTable[symTabIt].label, lLabel);
                 symbolTable[symTabIt].address = currentAddress;
                 symTabIt++;
-                printf("%s   @address: 0x%04x\n", lLabel, currentAddress);
+                //printf("%s   @address: 0x%04x\n", lLabel, currentAddress);
             }
             currentAddress += 0x02;
-		}
-	};
-
-    // print out the symbol table
-    printf("symbol table:\n");
-    for(int i = 0; i < symTabIt; i++){
-        printf("%s   @address: 0x%04x\n", symbolTable[i].label, symbolTable[i].address);
+        }
     }
+}
 
-    // Testing offsetCalc()
-    //int offset = offsetCalc(0x1000, "y");
-    //printf("computed offset is: 0x%04x\n", offset);
-
+/*
+ * Parses code the second time and write compiled code to output file
+ */
+void secondPass() {
     // Begin second pass
     rewind(infile);
+
+    char lLine[MAX_LINE_LENGTH + 1],
+            *lLabel, *lOpcode, *lArg1, *lArg2, *lArg3, *lArg4;
     int currentPC = ORIG; // the current PC should be updated before the instruction is processed.
-    lRet = EMPTY_LINE;
+    int lRet = EMPTY_LINE;
 
     while( lRet != DONE ) {
-		lRet = readAndParse(infile, lLine, &lLabel,
-			&lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+        lRet = readAndParse(infile, lLine, &lLabel,
+                            &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
 
-		if( lRet == OK ) {
+        if( lRet == OK ) {
             currentPC += 0x02;
             // TODO: make sure to implement a count to count the address of the current instruction
             // TODO: to calculate PC Offset, use offsetCalc( currentPC, Arg)
@@ -259,29 +285,24 @@ int main(int argc, char* argv[]) {
             //TODO: make the bits to put in the actual object file, whether by PC offset or labels or whatever
 
             if (renderInstructions[opcodeType][0] != -1) {
-            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
+                output |= (assembleOperand(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
             }
             if (renderInstructions[opcodeType][1] != -1) {
-            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
+                output |= (assembleOperand(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
             }
             if (renderInstructions[opcodeType][2] != -1) {
-            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
+                output |= (assembleOperand(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
             }
             if (renderInstructions[opcodeType][3] != -1) {
-            	output |= (assembleOperand(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
+                output |= (assembleOperand(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
             }
 
             output &= andMasks[opcodeType];
-        	fprintf( outfile, "0x%04X\n", output);
+            fprintf( outfile, "0x%04X\n", output);
 
             //currentAddress += 0x02;
-		}
-	};
-
-     /* Close the files*/
-
-     fclose(infile);
-     fclose(outfile);
+        }
+    };
 }
 
 /*
