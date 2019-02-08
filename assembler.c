@@ -24,15 +24,37 @@ enum
    DONE, OK, EMPTY_LINE
 };
 
+typedef struct {
+	char name[5];
+	short opcode;
+	int renderInstructions[4];
+	short isRegister[4];
+	int orMask;
+	int andMask;
+} opcodeInstruction;
+
+opcodeInstruction opcodeInstr[28] = {
+	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
+	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
+	{ "and",0x05,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
+	{ "and",0x05,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
+	{ "br",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF },
+	{ "brn",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x800,0xF9FF },
+	{ "brz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x400,0xF5FF },
+	{ "brp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x200,0xF3FF },
+	{ "brnz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xB00,0xFDFF },
+	{ "brnp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xA00,0xFBFF },
+	{ "brzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x600,0xF7FF },
+	{ "brnzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF }
+};
+
 // Global list of valid opcodes
+/*
 char opcodes[28][5] = {
     "add", "and", "br", "brn", "brz", "brp", "brnz", "brnp", "brzp", "brnzp", "halt", "jmp", "jsr", "jsrr", "ldb", "ldw",
             "lea", "nop", "not", "ret", "lshf", "rshfl", "rshfa", "rti", "stb", "stw", "trap", "xor"
 
 };
-
-// Hex values that the opcodes correspond to
-int opcodesobj[28] = {0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04, 0x01, 0x02, 0x03, 0x04};
 
 int renderInstructions[28][4] = {
 	//{Arg1,Arg2,...}  //100s place is how many bits to use. Remainder is offset from after opcode to place argument in
@@ -53,44 +75,8 @@ int renderInstructions[28][4] = {
 	{300,303,606,-1}, // LDW
 	{300,903,-1,-1} // LEA
 };
+*/
 
-int orMasks[28] = { // All are undone
-	0x0, //ADD
-	0x0, // AND
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // BRn
-	0x0, // HALT
-	0x0, // JMP
-	0x0, // JSR
-	0x0, // JSRR
-	0x0, // LDB
-	0x0, // LDW
-	0x0 // LEA
-};
-
-int andMasks[28] = { // All are undone
-	0xFFFF, //ADD
-	0xFFFF, // AND
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // BRn
-	0xFFFF, // HALT
-	0xFFFF, // JMP
-	0xFFFF, // JSR
-	0xFFFF, // JSRR
-	0xFFFF, // LDB
-	0xFFFF, // LDW
-	0xFFFF // LEA
-};
 
 // Global .ORIG address
 int16_t ORIG = 0;
@@ -160,10 +146,15 @@ int	readAndParse(FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, 
 	*pArg4 = lPtr;
 	return( OK );
 }
+
+/**
+ * Checks if a given string is a valid opcode
+ * Returns the index of the instruction in the list, or -1 if not a valid opcode
+ */
 int isOpcode(char * ptr){
     // iterate through opcodes
-    for(int i = 0; i < 28; i++){
-        if(strcmp(ptr, opcodes[i]) == 0){
+    for(int i = 0; i < 28; i++) {
+    	if(strcmp(ptr, opcodeInstr[i].name) == 0) {
             return i;
         }
     }
@@ -281,23 +272,23 @@ void secondPass() {
             int opcodeType = isOpcode(lOpcode);
             //TODO: Change the opcode type to be one of the sub-types for each instruction
 
-            output |= orMasks[opcodeType];
+            output |= opcodeInstr[opcodeType].orMask;
             //TODO: make the bits to put in the actual object file, whether by PC offset or labels or whatever
 
-            if (renderInstructions[opcodeType][0] != -1) {
-                output |= (assembleOperand(lArg1) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
+            if (opcodeInstr[opcodeType].isRegister[0] != -1) {
+                output |= (assembleOperand(lArg1, currentPC) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
             }
-            if (renderInstructions[opcodeType][1] != -1) {
-                output |= (assembleOperand(lArg1) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
+            if (opcodeInstr[opcodeType].isRegister[1] != -1) {
+                output |= (assembleOperand(lArg2, currentPC) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
             }
-            if (renderInstructions[opcodeType][2] != -1) {
-                output |= (assembleOperand(lArg1) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
+            if (opcodeInstr[opcodeType].isRegister[2] != -1) {
+                output |= (assembleOperand(lArg3, currentPC) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
             }
-            if (renderInstructions[opcodeType][3] != -1) {
-                output |= (assembleOperand(lArg1) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
+            if (opcodeInstr[opcodeType].isRegister[3] != -1) {
+                output |= (assembleOperand(lArg4, currentPC) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
             }
 
-            output &= andMasks[opcodeType];
+            output &= opcodeInstr[opcodeType].andMask;
             fprintf( outfile, "0x%04X\n", output);
 
             //currentAddress += 0x02;
@@ -309,11 +300,11 @@ void secondPass() {
  * Return the renderInstructions left shift value
  */
 int lShift(int opc, int argN) {
-	return 12 - renderInstructions[opc][argN] / 100 - renderInstructions[opc][argN] % 100;
+	return 12 - opcodeInstr[opc].renderInstructions[argN] / 100 - opcodeInstr[opc].renderInstructions[argN] % 100;
 }
 
 int bitMask(int opc, int argN) {
-	return 0xFFFF >> (16 - renderInstructions[opc][argN] / 100);
+	return 0xFFFF >> (16 - opcodeInstr[opc].renderInstructions[argN] / 100);
 }
 
 /*
@@ -344,10 +335,10 @@ int offsetCalc(int currentPC, char* Arg){
 /*
  * Assemble a single operand
  */
-int assembleOperand(char * arg) {
+int assembleOperand(char * arg, int PC) {
 	if (arg[0] == 'r')
 		return (int) arg[1];
-	return toNum(arg);
+	return offsetCalc(PC, arg);
 }
 
 
