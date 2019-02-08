@@ -265,33 +265,38 @@ void secondPass() {
         if( lRet == OK ) {
             currentPC += 0x02;
             // TODO: make sure to implement a count to count the address of the current instruction
-            // TODO: to calculate PC Offset, use offsetCalc( currentPC, Arg)
             int output = 0;
-            //output = output + *lOpcode; //TODO: rewrite this. Set first four bits of output to be the opcode.
-            output = output << 12;
             int opcodeType = isOpcode(lOpcode);
-            //TODO: Change the opcode type to be one of the sub-types for each instruction
+            if (opcodeType == -1)
+            	continue; //TODO: change error handling. This is for bad opcode.
 
+            //Change the opcode type to be one the correct sub-types (in terms of register vs. offset) for each instruction
+            char** args = {lArg1, lArg2, lArg3, lArg4};
+            for (int i = 0; i < 8; i++) {
+            	for (int x = 0; x < 4; x++) {
+            		if ((opcodeInstr[opcodeType].isRegister[x] != -1) && (opcodeInstr[opcodeType].isRegister[x] != isRegister(args[x]))) { //TODO: change this if to deal with too many arguments given
+            			x = -1;
+            			i = -1;
+            			opcodeType++;
+            			if (strcmp(lOpcode, opcodeInstr[i].name) != 0)
+            				continue; //TODO: change error handling. This is incorrect argument specification.
+            		}
+            	}
+            }
+
+            //Set first four bits of output to be the opcode.
+            output |= opcodeInstr[opcodeType].opcode << 12;
             output |= opcodeInstr[opcodeType].orMask;
-            //TODO: make the bits to put in the actual object file, whether by PC offset or labels or whatever
 
-            if (opcodeInstr[opcodeType].isRegister[0] != -1) {
-                output |= (assembleOperand(lArg1, currentPC) << lShift(opcodeType, 0)) && bitMask(opcodeType, 0);
-            }
-            if (opcodeInstr[opcodeType].isRegister[1] != -1) {
-                output |= (assembleOperand(lArg2, currentPC) << lShift(opcodeType, 1)) && bitMask(opcodeType, 1);
-            }
-            if (opcodeInstr[opcodeType].isRegister[2] != -1) {
-                output |= (assembleOperand(lArg3, currentPC) << lShift(opcodeType, 2)) && bitMask(opcodeType, 2);
-            }
-            if (opcodeInstr[opcodeType].isRegister[3] != -1) {
-                output |= (assembleOperand(lArg4, currentPC) << lShift(opcodeType, 3)) && bitMask(opcodeType, 3);
+            //Put operands into the instruction
+            for (int x = 0; x < 4; x++) {
+                if (opcodeInstr[opcodeType].isRegister[x] != -1) {
+                    output |= (assembleOperand(args[x], currentPC) << lShift(opcodeType, x)) && bitMask(opcodeType, x);
+                } else break;
             }
 
             output &= opcodeInstr[opcodeType].andMask;
             fprintf( outfile, "0x%04X\n", output);
-
-            //currentAddress += 0x02;
         }
     };
 }
@@ -305,6 +310,16 @@ int lShift(int opc, int argN) {
 
 int bitMask(int opc, int argN) {
 	return 0xFFFF >> (16 - opcodeInstr[opc].renderInstructions[argN] / 100);
+}
+
+//Check if a given char string is a register "r."
+int isRegister(char* str) {
+	if (str[0] == 'r') {
+		if (str[1] >= '0')
+			if (str[1] <= '7')
+				return 1;
+	} else
+		return 0;
 }
 
 /*
@@ -336,9 +351,10 @@ int offsetCalc(int currentPC, char* Arg){
  * Assemble a single operand
  */
 int assembleOperand(char * arg, int PC) {
-	if (arg[0] == 'r')
+	if (isRegister(arg))
 		return (int) arg[1];
-	return offsetCalc(PC, arg);
+	else
+		return offsetCalc(PC, arg); //This works whether the offset is immediate or a label
 }
 
 
