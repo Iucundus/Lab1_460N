@@ -33,7 +33,7 @@ typedef struct {
 	int andMask;
 } opcodeInstruction;
 
-opcodeInstruction opcodeInstr[28] = {
+opcodeInstruction opcodeInstr[29] = {
 	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
 	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
 	{ "and",0x05,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
@@ -45,38 +45,25 @@ opcodeInstruction opcodeInstr[28] = {
 	{ "brnz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xB00,0xFDFF },
 	{ "brnp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xA00,0xFBFF },
 	{ "brzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x600,0xF7FF },
-	{ "brnzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF }
+	{ "brnzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF },
+	{ "jmp",0x0C,{303,-1,-1,-1},{1,-1,-1,-1},0x00,0xF1C0 },
+	{ "jsr",0x04,{1101,-1,-1,-1},{0,-1,-1,-1},0x800,0xFFFF },
+	{ "jsrr",0x04,{303,-1,-1,-1},{1,-1,-1,-1},0x0,0xF1C0 },
+	{ "ldb",0x02,{300,303,606,-1},{1,1,0,-1},0x0,0xFFFF },
+	{ "ldw",0x06,{300,303,606,-1},{1,1,0,-1},0x0,0xFFFF },
+	{ "lea",0x0E,{300,903,-1,-1},{1,0,-1,-1},0x0,0xFFFF },
+	{ "not",0x09,{300,303,-1,-1},{1,1,-1,-1},0x3F,0xFFFF },
+	{ "ret",0x0C,{-1,-1,-1,-1},{-1,-1,-1,-1},0x01C0,0xF1C0 },
+	{ "rti",0x08,{-1,-1,-1,-1},{-1,-1,-1,-1},0x0,0xF000 },
+	{ "lshf",0x0D,{300,303,408,-1},{1,1,0,-1},0x00,0xFFCF },
+	{ "rshfl",0x0D,{300,303,408,-1},{1,1,0,-1},0x10,0xFFDF },
+	{ "rshfa",0x0D,{300,303,408,-1},{1,1,0,-1},0x30,0xFFFF },
+	{ "stb",0x03,{300,303,606,-1},{1,1,0,-1},0x0,0xFFFF },
+	{ "stw",0x07,{300,303,606,-1},{1,1,0,-1},0x0,0xFFFF },
+	{ "trap",0x0F,{804,-1,-1,-1},{0,-1,-1,-1},0x0,0xF0FF },
+	{ "xor",0x09,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
+	{ "xor",0x09,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF }
 };
-
-// Global list of valid opcodes
-/*
-char opcodes[28][5] = {
-    "add", "and", "br", "brn", "brz", "brp", "brnz", "brnp", "brzp", "brnzp", "halt", "jmp", "jsr", "jsrr", "ldb", "ldw",
-            "lea", "nop", "not", "ret", "lshf", "rshfl", "rshfa", "rti", "stb", "stw", "trap", "xor"
-
-};
-
-int renderInstructions[28][4] = {
-	//{Arg1,Arg2,...}  //100s place is how many bits to use. Remainder is offset from after opcode to place argument in
-	{300,303,309,-1}, //ADD
-	{300,303,309,-1}, // AND
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // BRn
-	{300,303,309,-1}, // HALT
-	{303,-1,-1,-1}, // JMP
-	{1101,-1,-1,-1}, // JSR
-	{303,-1,-1,-1}, // JSRR
-	{300,303,606,-1}, // LDB
-	{300,303,606,-1}, // LDW
-	{300,903,-1,-1} // LEA
-};
-*/
-
 
 // Global .ORIG address
 int16_t ORIG = 0;
