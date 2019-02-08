@@ -264,14 +264,19 @@ void secondPass() {
 
         if( lRet == OK ) {
             currentPC += 0x02;
-            // TODO: make sure to implement a count to count the address of the current instruction
+            if(strcmp(lOpcode, ".orig") == 0){
+                currentPC += 2;
+                lRet = readAndParse(infile, lLine, &lLabel,
+                                    &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
+            }
             int output = 0;
             int opcodeType = isOpcode(lOpcode);
-            if (opcodeType == -1)
-            	continue; //TODO: change error handling. This is for bad opcode.
+
+            if (opcodeType == -1) // doesn't account for .orig or .end
+                exit(2); // This is for bad opcode.
 
             //Change the opcode type to be one the correct sub-types (in terms of register vs. offset) for each instruction
-            char** args = {lArg1, lArg2, lArg3, lArg4};
+            char* args[4] = {lArg1, lArg2, lArg3, lArg4};
             for (int i = 0; i < 8; i++) {
             	for (int x = 0; x < 4; x++) {
             		if ((opcodeInstr[opcodeType].isRegister[x] != -1) && (opcodeInstr[opcodeType].isRegister[x] != isRegister(args[x]))) { //TODO: change this if to deal with too many arguments given
@@ -289,6 +294,7 @@ void secondPass() {
             output |= opcodeInstr[opcodeType].orMask;
 
             //Put operands into the instruction
+            // TODO: we must make sure that the PC offset is within bounds for the instruction
             for (int x = 0; x < 4; x++) {
                 if (opcodeInstr[opcodeType].isRegister[x] != -1) {
                     output |= (assembleOperand(args[x], currentPC) << lShift(opcodeType, x)) && bitMask(opcodeType, x);
@@ -314,6 +320,7 @@ int bitMask(int opc, int argN) {
 
 //Check if a given char string is a register "r."
 int isRegister(char* str) {
+    // TODO: string is empty. bad access exception thrown.
 	if (str[0] == 'r') {
 		if (str[1] >= '0')
 			if (str[1] <= '7')
@@ -326,9 +333,8 @@ int isRegister(char* str) {
  * Calculate PC Offset
  */
 int offsetCalc(int currentPC, char* Arg){
-    // ToDo: if PC Offset: return offset, else if Label: calculate and return offset
     // valid Label formats: BR (9), JSR (11), LEA (9)
-    if(Arg[0] == '#'){
+    if(Arg[0] == '#' | Arg[0] == 'x'){
         // it is PC offset
         // change to integer and return
         return toNum(Arg);
@@ -343,6 +349,7 @@ int offsetCalc(int currentPC, char* Arg){
                 return offset; // may have to bit shift or something, I can't remember
             }
         }
+        // symbol not found error
         exit(1);
     }
 }
