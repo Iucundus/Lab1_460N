@@ -259,9 +259,19 @@ void secondPass() {
             int output = 0;
             int opcodeType = isOpcode(lOpcode);
 
-            if (opcodeType == -1) {
-            	if (strcmp(lOpcode, "halt") == 0) {
+            if (opcodeType == -1) { //Check if a pseudo-op
+            	if (strcmp(lLabel, "halt") == 0) {
                     output = 0xF019;
+                    fprintf( outfile, "0x%04X\n", output);
+                	continue;
+            	}
+            	if (strcmp(lOpcode, ".fill") == 0) {
+                    output = toNum(lArg1);
+                    fprintf( outfile, "0x%04X\n", output);
+                	continue;
+            	}
+            	if (strcmp(lOpcode, "nop") == 0) {
+                    output = 0;
                     fprintf( outfile, "0x%04X\n", output);
                 	continue;
             	}
