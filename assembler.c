@@ -35,7 +35,7 @@ typedef struct {
 
 opcodeInstruction opcodeInstr[29] = {
 	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
-	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
+	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF },
 	{ "and",0x05,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
 	{ "and",0x05,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
 	{ "br",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF },
@@ -251,7 +251,7 @@ void secondPass() {
 
         if( lRet == OK ) {
             currentPC += 0x02;
-            if(strcmp(lOpcode, ".orig") == 0){
+            if(strcmp(lOpcode, ".orig") == 0) {
                 currentPC += 2;
                 lRet = readAndParse(infile, lLine, &lLabel,
                                     &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
@@ -259,12 +259,22 @@ void secondPass() {
             int output = 0;
             int opcodeType = isOpcode(lOpcode);
 
-            if (opcodeType == -1) // doesn't account for .orig or .end
+            if (opcodeType == -1) {
+            	if (strcmp(lOpcode, "halt") == 0) {
+                    output = 0xF019;
+                    fprintf( outfile, "0x%04X\n", output);
+                	continue;
+            	}
+            	if (strcmp(lOpcode, ".end") == 0) {
+            		exit(0);
+                	continue;
+            	}
                 exit(2); // This is for bad opcode.
+            }
 
             //Change the opcode type to be one the correct sub-types (in terms of register vs. offset) for each instruction
             char* args[4] = {lArg1, lArg2, lArg3, lArg4};
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 1; i++) {
             	for (int x = 0; x < 4; x++) {
             		if ((opcodeInstr[opcodeType].isRegister[x] != -1) && (opcodeInstr[opcodeType].isRegister[x] != isRegister(args[x]))) { //TODO: change this if to deal with too many arguments given
             			x = -1;
@@ -281,10 +291,12 @@ void secondPass() {
             output |= opcodeInstr[opcodeType].orMask;
 
             //Put operands into the instruction
-            // TODO: we must make sure that the PC offset is within bounds for the instruction
             for (int x = 0; x < 4; x++) {
                 if (opcodeInstr[opcodeType].isRegister[x] != -1) {
-                    output |= (assembleOperand(args[x], currentPC) << lShift(opcodeType, x)) && bitMask(opcodeType, x);
+                	int operand = assembleOperand(args[x], currentPC);
+                	if (operand >= 1<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
+						continue; //TODO: change error handling. This is bit overflow, too large positive. Add check for large negative
+                    output |= (assembleOperand(args[x], currentPC) && bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
                 } else break;
             }
 
@@ -301,8 +313,11 @@ int lShift(int opc, int argN) {
 	return 12 - opcodeInstr[opc].renderInstructions[argN] / 100 - opcodeInstr[opc].renderInstructions[argN] % 100;
 }
 
-int bitMask(int opc, int argN) {
-	return 0xFFFF >> (16 - opcodeInstr[opc].renderInstructions[argN] / 100);
+/*
+ * Provides an n-bit-long AND mask.
+ */
+int bitMask(int len) {
+	return 0xFFFF >> (16 - len);
 }
 
 //Check if a given char string is a register "r."
@@ -346,7 +361,7 @@ int offsetCalc(int currentPC, char* Arg){
  */
 int assembleOperand(char * arg, int PC) {
 	if (isRegister(arg))
-		return (int) arg[1];
+		return (int) arg[1] - '0';
 	else
 		return offsetCalc(PC, arg); //This works whether the offset is immediate or a label
 }
