@@ -14,10 +14,6 @@ EE 460N, Lab 1
 #include <ctype.h> /* Library for useful character operations */
 #include <limits.h> /* Library for definitions of common variable type characteristics */
 
-/*
-Parsing Assembly Language
-Take a line of the input file and parse it into corresponding fields. Note that you need to write the isOpcode(char*) function which determines whether a string of characters is a valid opcode.
-*/
 #define MAX_LINE_LENGTH 255
 enum
 {
@@ -32,7 +28,7 @@ typedef struct {
 	int orMask;
 	int andMask;
 } opcodeInstruction;
-// TODO: psuedo-op codes
+
 opcodeInstruction opcodeInstr[29] = {
 	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
 	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF },
@@ -89,8 +85,13 @@ int toNum( char * pStr );
 void firstPass();
 void secondPass();
 void printSymbolTable();
+int isRegister(char* str);
+int lShift(int opc, int argN);
+int bitMask(int len);
+int assembleOperand(char * arg, int PC);
+
 int	readAndParse(FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
-   char * lRet, * lPtr;
+   char * lPtr;
    int i;
    if( !fgets( pLine, MAX_LINE_LENGTH, pInfile ) )
 	return( DONE );
@@ -168,17 +169,9 @@ int main(int argc, char* argv[]) {
 
     firstPass();
     printSymbolTable();
-    // Testing offsetCalc()
-    //int offset = offsetCalc(0x1000, "y");
-    //printf("computed offset is: 0x%04x\n", offset);
     secondPass();
 
-
-
-
-
      /* Close the files*/
-
      fclose(infile);
      fclose(outfile);
 }
@@ -207,6 +200,10 @@ void firstPass() {
         if( lRet == OK){
             if( strcmp(lOpcode, ".orig") == 0){
                 ORIG = toNum(lArg1);
+                if (ORIG & 0x0001 == 1)
+                	exit(3);
+                if (ORIG >= 1 << 16)
+                	exit(3);
                 currentAddress = ORIG;
                 printf("Starting address: 0x%04x\n", ORIG);
             }
@@ -261,7 +258,7 @@ void secondPass() {
 
             if (opcodeType == -1) { //Check if a pseudo-op
             	if (strcmp(lLabel, "halt") == 0) {
-                    output = 0xF019;
+                    output = 0xF025;
                     fprintf( outfile, "0x%04X\n", output);
                 	continue;
             	}
@@ -276,8 +273,7 @@ void secondPass() {
                 	continue;
             	}
             	if (strcmp(lOpcode, ".end") == 0) {
-            		exit(0);
-                	continue;
+            		break;
             	}
                 exit(2); // This is for bad opcode.
             }
@@ -286,12 +282,12 @@ void secondPass() {
             char* args[4] = {lArg1, lArg2, lArg3, lArg4};
             for (int i = 0; i < 1; i++) {
             	for (int x = 0; x < 4; x++) {
-            		if ((opcodeInstr[opcodeType].isRegister[x] != -1) && (opcodeInstr[opcodeType].isRegister[x] != isRegister(args[x]))) { //TODO: change this if to deal with too many arguments given
+            		if (opcodeInstr[opcodeType].isRegister[x] != isRegister(args[x])) {
             			x = -1;
             			i = -1;
             			opcodeType++;
-            			if (strcmp(lOpcode, opcodeInstr[i].name) != 0)
-            				continue; //TODO: change error handling. This is incorrect argument specification.
+            			if ((i == 29) || (strcmp(lOpcode, opcodeInstr[i].name) != 0))
+            				exit(4);
             		}
             	}
             }
@@ -305,14 +301,15 @@ void secondPass() {
                 if (opcodeInstr[opcodeType].isRegister[x] != -1) {
                 	int operand = assembleOperand(args[x], currentPC);
                 	if (operand >= 1<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
-						continue; //TODO: change error handling. This is bit overflow, too large positive. Add check for large negative
+						exit(3);
+                	if (operand < (-1)<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
+                		exit(3);
                     output |= (assembleOperand(args[x], currentPC) && bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
                 } else break;
             }
 
             output &= opcodeInstr[opcodeType].andMask;
             fprintf( outfile, "0x%04X\n", output);
-            printf("0x%04X\n", output);
         }
     };
 }
@@ -333,11 +330,13 @@ int bitMask(int len) {
 
 //Check if a given char string is a register "r."
 int isRegister(char* str) {
-    // TODO: string is empty. bad access exception thrown.
+	if (*str == '\0')
+		return -1;
 	if (str[0] == 'r') {
 		if (str[1] >= '0')
 			if (str[1] <= '7')
-				return 1;
+				if (str[2] == '\0')
+					return 1;
 	} else
 		return 0;
 }
