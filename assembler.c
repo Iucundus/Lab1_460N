@@ -32,7 +32,7 @@ typedef struct {
 	int orMask;
 	int andMask;
 } opcodeInstruction;
-
+// TODO: psuedo-op codes
 opcodeInstruction opcodeInstr[29] = {
 	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
 	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF },
@@ -312,6 +312,7 @@ void secondPass() {
 
             output &= opcodeInstr[opcodeType].andMask;
             fprintf( outfile, "0x%04X\n", output);
+            printf("0x%04X\n", output);
         }
     };
 }
