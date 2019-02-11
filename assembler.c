@@ -33,12 +33,12 @@ opcodeInstruction opcodeInstr[29] = {
 	{ "add",0x01,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
 	{ "add",0x01,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF },
 	{ "and",0x05,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
-	{ "and",0x05,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF },
+	{ "and",0x05,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF },
 	{ "br",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF },
 	{ "brn",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x800,0xF9FF },
 	{ "brz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x400,0xF5FF },
 	{ "brp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x200,0xF3FF },
-	{ "brnz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xB00,0xFDFF },
+	{ "brnz",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xC00,0xFDFF },
 	{ "brnp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xA00,0xFBFF },
 	{ "brzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0x600,0xF7FF },
 	{ "brnzp",0x00,{903,-1,-1,-1},{0,-1,-1,-1},0xE00,0xFFFF },
@@ -58,7 +58,7 @@ opcodeInstruction opcodeInstr[29] = {
 	{ "stw",0x07,{300,303,606,-1},{1,1,0,-1},0x0,0xFFFF },
 	{ "trap",0x0F,{804,-1,-1,-1},{0,-1,-1,-1},0x0,0xF0FF },
 	{ "xor",0x09,{300,303,309,-1},{1,1,1,-1},0x0,0xFFC7 },
-	{ "xor",0x09,{300,303,507,-1},{1,1,0,-1},0x02,0xFFFF }
+	{ "xor",0x09,{300,303,507,-1},{1,1,0,-1},0x20,0xFFFF }
 };
 
 // Global .ORIG address
@@ -156,7 +156,7 @@ FILE* outfile = NULL;
 int main(int argc, char* argv[]) {
 
     infile = fopen(argv[1], "r");
-	//infile = fopen("tests/e1.asm", "r"); //Use to override arg input filename
+	//infile = fopen("tests/AsmTestAllInstructions.asm", "r"); //Use to override arg input filename
      outfile = fopen(argv[2], "w");
 
      if (!infile) {
