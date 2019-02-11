@@ -211,7 +211,7 @@ void firstPass() {
         }
     }
 
-    while( lRet != DONE ) {
+    while( lRet != DONE) {
         lRet = readAndParse(infile, lLine, &lLabel,
                             &lOpcode, &lArg1, &lArg2, &lArg3, &lArg4 );
 
@@ -219,11 +219,16 @@ void firstPass() {
         if( lRet == OK ) {
             // check for Label
             if(strcmp(lLabel, "") != 0) {
-                // found a label
-                strcpy(symbolTable[symTabIt].label, lLabel);
-                symbolTable[symTabIt].address = currentAddress;
-                symTabIt++;
-                //printf("%s   @address: 0x%04x\n", lLabel, currentAddress);
+                if(strcmp(lLabel, ".end") == 0){
+                    break;
+                }
+                if(strcmp(lLabel, "halt") != 0) {
+                    // found a label
+                    strcpy(symbolTable[symTabIt].label, lLabel);
+                    symbolTable[symTabIt].address = currentAddress;
+                    symTabIt++;
+                    //printf("%s   @address: 0x%04x\n", lLabel, currentAddress);
+                }
             }
             currentAddress += 0x02;
         }
