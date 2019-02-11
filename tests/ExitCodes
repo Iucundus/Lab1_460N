@@ -1,0 +1,15 @@
+
+tests/Ammount4Overflow.asm 3
+tests/AsmTestAllInstructions.asm 4
+tests/e1.asm 4
+tests/Imm5Overflow.asm 4
+tests/incorrectOpcode.asm 2
+tests/incorrectOperand.asm 4
+tests/o1.asm 2
+tests/Offset11OutofBounds.asm 3
+tests/Offset6OutofBounds.asm 3
+tests/Offset9OutofBounds.asm 3
+tests/tooFewOperands.asm 4
+tests/tooManyOperands.asm 4
+tests/Trapvect8OutofBounds.asm 3
+tests/undefinedLabelErr1.asm 1
