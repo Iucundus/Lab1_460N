@@ -9,7 +9,7 @@
         BRp B1
         BRnz B1
         BRnp B1
-        BRpz B1
+        BRzp B1
         BRnzp B1
 B1      JMP R0
         JSR SR
