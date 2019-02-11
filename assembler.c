@@ -88,7 +88,7 @@ void printSymbolTable();
 int isRegister(char* str);
 int lShift(int opc, int argN);
 int bitMask(int len);
-int assembleOperand(char * arg, int PC);
+int assembleOperand(char * arg, int PC, int isBytes);
 
 int	readAndParse(FILE * pInfile, char * pLine, char ** pLabel, char ** pOpcode, char ** pArg1, char ** pArg2, char ** pArg3, char ** pArg4	) {
    char * lPtr;
@@ -305,12 +305,17 @@ void secondPass() {
             //Put operands into the instruction
             for (int x = 0; x < 4; x++) {
                 if (opcodeInstr[opcodeType].isRegister[x] != -1) {
-                	int operand = assembleOperand(args[x], currentPC);
+                	int isBytes = 0;
+                	if (strcmp(opcodeInstr[opcodeType].name, "ldb") == 0)
+                		isBytes = 1;
+					if (strcmp(opcodeInstr[opcodeType].name, "stb") == 0)
+						isBytes = 1;
+                	int operand = assembleOperand(args[x], currentPC, isBytes);
                 	if (operand >= 1<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
 						exit(3);
                 	if (operand < (-1)<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
                 		exit(3);
-                    output |= (assembleOperand(args[x], currentPC) & bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
+                    output |= (operand & bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
                 } else break;
             }
 
@@ -350,7 +355,7 @@ int isRegister(char* str) {
 /*
  * Calculate PC Offset
  */
-int offsetCalc(int currentPC, char* Arg){
+int offsetCalc(int currentPC, char* Arg, int isBytes){
     // valid Label formats: BR (9), JSR (11), LEA (9)
     if(Arg[0] == '#' | Arg[0] == 'x'){
         // it is PC offset
@@ -364,7 +369,8 @@ int offsetCalc(int currentPC, char* Arg){
             if(strcmp(symbolTable[i].label, Arg) == 0){
                 // found the symbol
                 int offset = symbolTable[i].address - currentPC;
-                offset = offset >> 1;
+                if (!isBytes)
+                	offset = offset >> 1;
                 offset++;
                 return offset; // may have to bit shift or something, I can't remember
             }
@@ -377,11 +383,11 @@ int offsetCalc(int currentPC, char* Arg){
 /*
  * Assemble a single operand
  */
-int assembleOperand(char * arg, int PC) {
+int assembleOperand(char * arg, int PC, int isBytes) {
 	if (isRegister(arg))
 		return (int) arg[1] - '0';
 	else
-		return offsetCalc(PC, arg); //This works whether the offset is immediate or a label
+		return offsetCalc(PC, arg, isBytes); //This works whether the offset is immediate or a label
 }
 
 
