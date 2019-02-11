@@ -359,6 +359,7 @@ int offsetCalc(int currentPC, char* Arg){
             if(strcmp(symbolTable[i].label, Arg) == 0){
                 // found the symbol
                 int offset = symbolTable[i].address - currentPC;
+                offset = offset >> 1;
                 return offset; // may have to bit shift or something, I can't remember
             }
         }
