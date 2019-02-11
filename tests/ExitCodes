@@ -1,7 +1,7 @@
 
 tests/Ammount4Overflow.asm 3
-tests/AsmTestAllInstructions.asm 0
-tests/e1.asm 0
+tests/AsmTestAllInstructions.asm 4
+tests/e1.asm 4
 tests/Imm5Overflow.asm 4
 tests/incorrectOpcode.asm 2
 tests/incorrectOperand.asm 4
