@@ -62,10 +62,10 @@ opcodeInstruction opcodeInstr[29] = {
 };
 
 // Global .ORIG address
-int16_t ORIG = 0;
+int ORIG = 0;
 
 // Global current address
-int16_t currentAddress = 0;
+int currentAddress = 0;
 
 // Global symbol table iterator
 int symTabIt = 0;
@@ -155,7 +155,8 @@ FILE* outfile = NULL;
 
 int main(int argc, char* argv[]) {
 
-     infile = fopen(argv[1], "r");
+    infile = fopen(argv[1], "r");
+	//infile = fopen("tests/e1.asm", "r"); //Use to override arg input filename
      outfile = fopen(argv[2], "w");
 
      if (!infile) {
@@ -286,7 +287,7 @@ void secondPass() {
             			x = -1;
             			i = -1;
             			opcodeType++;
-            			if ((i == 29) || (strcmp(lOpcode, opcodeInstr[i].name) != 0))
+            			if ((i == 29) || (strcmp(lOpcode, opcodeInstr[opcodeType].name) != 0))
             				exit(4);
             		}
             	}
@@ -304,7 +305,7 @@ void secondPass() {
 						exit(3);
                 	if (operand < (-1)<<(opcodeInstr[opcodeType].renderInstructions[x]/100 - 1))
                 		exit(3);
-                    output |= (assembleOperand(args[x], currentPC) && bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
+                    output |= (assembleOperand(args[x], currentPC) & bitMask(opcodeInstr[opcodeType].renderInstructions[x] / 100)) << lShift(opcodeType, x);
                 } else break;
             }
 
