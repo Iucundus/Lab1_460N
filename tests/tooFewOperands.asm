@@ -1,0 +1,3 @@
+.ORIG x3000
+	LDW R1, R2
+.END

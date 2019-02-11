@@ -1,0 +1,3 @@
+.ORIG x3000
+	BR x0FFF
+.END
