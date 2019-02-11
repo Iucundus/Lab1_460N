@@ -360,6 +360,7 @@ int offsetCalc(int currentPC, char* Arg){
                 // found the symbol
                 int offset = symbolTable[i].address - currentPC;
                 offset = offset >> 1;
+                offset++;
                 return offset; // may have to bit shift or something, I can't remember
             }
         }
